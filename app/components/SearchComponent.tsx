@@ -12,7 +12,9 @@ export default function SearchComponent() {
     const [results, setResults] = useState<PokemonCard[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [searchTime, setSearchTime] = useState(0);
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     const { addToCollection, removeFromCollection, isInCollection } = useCollectionStore();
 
@@ -44,6 +46,21 @@ export default function SearchComponent() {
         }
     }, [query, allNames]);
 
+    // Timer effect
+    useEffect(() => {
+        if (loading) {
+            setSearchTime(0);
+            timerRef.current = setInterval(() => {
+                setSearchTime(prev => prev + 1);
+            }, 1000); // Update every second
+        } else {
+            if (timerRef.current) clearInterval(timerRef.current);
+        }
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [loading]);
+
     const handleSearch = async (e?: React.FormEvent, searchQuery?: string) => {
         if (e) e.preventDefault();
         const q = searchQuery || query;
@@ -65,8 +82,13 @@ export default function SearchComponent() {
             }
 
             setResults(valuableCards);
-        } catch (err) {
-            setError('Failed to fetch cards. Please try again.');
+        } catch (err: any) {
+            console.error('Search Error:', err);
+            if (err.message && err.message.includes('429')) {
+                setError('Too many requests. Please wait a moment before searching again.');
+            } else {
+                setError(`Failed to fetch cards. (${err.message || 'Unknown error'})`);
+            }
         } finally {
             setLoading(false);
         }
@@ -119,9 +141,9 @@ export default function SearchComponent() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 min-w-[120px]"
                     >
-                        {loading ? 'Searching...' : 'Search'}
+                        {loading ? `Searching... ${searchTime}s` : 'Search'}
                     </button>
                 </form>
             </div>
