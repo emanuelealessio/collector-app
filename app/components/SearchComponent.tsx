@@ -97,17 +97,21 @@ export default function SearchComponent() {
                             placeholder="Search Pokémon (e.g., Charizard)"
                             className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
                         />
-                        {showSuggestions && suggestions.length > 0 && (
-                            <ul className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                                {suggestions.map((name, index) => (
-                                    <li
-                                        key={index}
-                                        onClick={() => selectSuggestion(name)}
-                                        className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-gray-200"
-                                    >
-                                        {name}
-                                    </li>
-                                ))}
+                        {showSuggestions && (
+                            <ul className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
+                                {suggestions.length > 0 ? (
+                                    suggestions.map((name, index) => (
+                                        <li
+                                            key={index}
+                                            onClick={() => selectSuggestion(name)}
+                                            className="px-4 py-3 hover:bg-gray-700 cursor-pointer text-gray-200 border-b border-gray-700/50 last:border-0 transition-colors"
+                                        >
+                                            {name}
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className="px-4 py-3 text-gray-500 text-sm">No suggestions found</li>
+                                )}
                             </ul>
                         )}
                     </div>
@@ -151,8 +155,8 @@ export default function SearchComponent() {
                                     <button
                                         onClick={() => toggleCollection(card)}
                                         className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${isOwned
-                                                ? 'bg-red-900/50 text-red-200 hover:bg-red-900'
-                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            ? 'bg-red-900/50 text-red-200 hover:bg-red-900'
+                                            : 'bg-blue-600 text-white hover:bg-blue-700'
                                             }`}
                                     >
                                         {isOwned ? 'Remove' : 'Add'}
