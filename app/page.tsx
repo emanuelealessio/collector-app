@@ -1,4 +1,5 @@
 import SearchComponent from './components/SearchComponent';
+import Dashboard from './components/Dashboard';
 
 export default function Home() {
   return (
@@ -12,6 +13,10 @@ export default function Home() {
             Track your high-value Pokémon cards. Only cards worth $5+ are shown.
           </p>
         </header>
+
+        <div className="mb-16">
+          <Dashboard />
+        </div>
 
         <SearchComponent />
       </div>

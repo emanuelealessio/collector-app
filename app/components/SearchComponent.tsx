@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { searchCards, filterValuableCards, PokemonCard, getCardMarketPrice, getPokemonNames } from '@/lib/pokemon-api';
+import { useCollectionStore } from '@/lib/store';
 
 export default function SearchComponent() {
     const [query, setQuery] = useState('');
@@ -11,6 +12,8 @@ export default function SearchComponent() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const wrapperRef = useRef<HTMLDivElement>(null);
+
+    const { addToCollection, removeFromCollection, isInCollection } = useCollectionStore();
 
     useEffect(() => {
         // Close suggestions when clicking outside
@@ -73,6 +76,14 @@ export default function SearchComponent() {
         handleSearch(undefined, name);
     };
 
+    const toggleCollection = (card: PokemonCard) => {
+        if (isInCollection(card.id)) {
+            removeFromCollection(card.id);
+        } else {
+            addToCollection(card);
+        }
+    };
+
     return (
         <div className="w-full max-w-4xl mx-auto p-4">
             <div ref={wrapperRef} className="relative mb-8">
@@ -119,8 +130,10 @@ export default function SearchComponent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {results.map((card) => {
                     const price = getCardMarketPrice(card);
+                    const isOwned = isInCollection(card.id);
+
                     return (
-                        <div key={card.id} className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-gray-500 transition-colors">
+                        <div key={card.id} className={`bg-gray-800 rounded-xl overflow-hidden border ${isOwned ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'border-gray-700'} hover:border-gray-500 transition-all`}>
                             <div className="relative aspect-[2.5/3.5]">
                                 <img
                                     src={card.images.small}
@@ -135,8 +148,14 @@ export default function SearchComponent() {
                                     <span className="text-green-400 font-mono font-bold text-xl">
                                         ${price?.toFixed(2)}
                                     </span>
-                                    <button className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white transition-colors">
-                                        Add
+                                    <button
+                                        onClick={() => toggleCollection(card)}
+                                        className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${isOwned
+                                                ? 'bg-red-900/50 text-red-200 hover:bg-red-900'
+                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            }`}
+                                    >
+                                        {isOwned ? 'Remove' : 'Add'}
                                     </button>
                                 </div>
                             </div>
