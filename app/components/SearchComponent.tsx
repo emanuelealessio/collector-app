@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { searchCards, filterValuableCards, PokemonCard, getCardMarketPrice, getPokemonNames } from '@/lib/pokemon-api';
+import { searchCards, filterValuableCards, PokemonCard, getCardMarketPrice, getAllPokemonNames } from '@/lib/pokemon-api';
 import { useCollectionStore } from '@/lib/store';
 
 export default function SearchComponent() {
     const [query, setQuery] = useState('');
+    const [allNames, setAllNames] = useState<string[]>([]);
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [results, setResults] = useState<PokemonCard[]>([]);
@@ -16,6 +17,9 @@ export default function SearchComponent() {
     const { addToCollection, removeFromCollection, isInCollection } = useCollectionStore();
 
     useEffect(() => {
+        // Prefetch all pokemon names on mount
+        getAllPokemonNames().then(names => setAllNames(names));
+
         // Close suggestions when clicking outside
         function handleClickOutside(event: MouseEvent) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
@@ -27,21 +31,18 @@ export default function SearchComponent() {
     }, [wrapperRef]);
 
     useEffect(() => {
-        const fetchSuggestions = async () => {
-            if (query.length >= 2) {
-                const names = await getPokemonNames(query);
-                setSuggestions(names);
-                setShowSuggestions(true);
-            } else {
-                setSuggestions([]);
-                setShowSuggestions(false);
-            }
-        };
-
-        // Debounce
-        const timeoutId = setTimeout(fetchSuggestions, 300);
-        return () => clearTimeout(timeoutId);
-    }, [query]);
+        if (query.length >= 2 && allNames.length > 0) {
+            // Local filtering - INSTANT
+            const filtered = allNames
+                .filter(name => name.toLowerCase().includes(query.toLowerCase()))
+                .slice(0, 10); // Limit to 10 suggestions
+            setSuggestions(filtered);
+            setShowSuggestions(true);
+        } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+    }, [query, allNames]);
 
     const handleSearch = async (e?: React.FormEvent, searchQuery?: string) => {
         if (e) e.preventDefault();

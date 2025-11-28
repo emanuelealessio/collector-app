@@ -56,18 +56,28 @@ export async function searchCards(query: string): Promise<PokemonCard[]> {
     return data.data;
 }
 
-export async function getPokemonNames(query: string): Promise<string[]> {
-    if (!query || query.length < 2) return [];
+// Cache for Pokemon names
+let pokemonNamesCache: string[] | null = null;
 
-    // We fetch a small number of cards matching the name to get suggestions
-    // Increased to 10 to provide better variety
-    const response = await fetch(`${API_URL}?q=name:"${query}*"&pageSize=10&select=name`);
-    if (!response.ok) return [];
+export async function getAllPokemonNames(): Promise<string[]> {
+    if (pokemonNamesCache) return pokemonNamesCache;
 
-    const data = await response.json();
-    // Deduplicate names and sort them
-    const names = Array.from(new Set(data.data.map((c: any) => c.name))).sort();
-    return names as string[];
+    try {
+        // We use PokeAPI for the names list because it's lighter and faster than TCG API for this purpose
+        // It gives us all ~1000+ species names in one go
+        const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=2000');
+        if (!response.ok) return [];
+
+        const data = await response.json();
+        // Capitalize names
+        pokemonNamesCache = data.results.map((p: any) =>
+            p.name.charAt(0).toUpperCase() + p.name.slice(1)
+        );
+        return pokemonNamesCache || [];
+    } catch (error) {
+        console.error('Failed to fetch pokemon names:', error);
+        return [];
+    }
 }
 
 export function getCardMarketPrice(card: PokemonCard): number | null {
