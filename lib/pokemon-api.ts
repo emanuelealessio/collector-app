@@ -43,10 +43,9 @@ export async function searchCards(query: string): Promise<PokemonCard[]> {
     if (!query) return [];
 
     // Construct the query to search by name
-    // We sort by price descending to ensure we see the most valuable cards first
-    // We also increase pageSize to 100 to get a better spread
-    // NOTE: Removed 'select' parameter as it was causing 404 errors with the API
-    const response = await fetch(`${API_URL}?q=name:"${query}*"&orderBy=-tcgplayer.prices.holofoil.market&pageSize=100`);
+    // NOTE: Removed 'select' and 'orderBy' parameters as they were causing 404/timeout errors with the API
+    // We will sort client-side if necessary, but stability is priority.
+    const response = await fetch(`${API_URL}?q=name:"${query}*"&pageSize=100`);
 
     if (!response.ok) {
         throw new Error('Failed to fetch cards');
